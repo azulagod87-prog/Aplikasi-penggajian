@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payroll Management System - PT Iskandar Anita</title>
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        :root {
+            --pink-primary: #ec4899;
+            --pink-dark: #db2777;
+            --pink-light: #fbcfe8;
+            --pink-soft: #fdf2f8;
+        }
+        
+        .sidebar-item { transition: all 0.2s; }
+        .sidebar-item:hover, .sidebar-item.active { 
+            background: linear-gradient(135deg, rgba(236,72,153,0.1) 0%, rgba(244,114,182,0.1) 100%);
+            color: #ec4899; 
+            border-left: 3px solid #ec4899;
+        }
+        .sidebar-item.active {
+            background: linear-gradient(135deg, rgba(236,72,153,0.15) 0%, rgba(244,114,182,0.15) 100%);
+            font-weight: 600;
+        }
+        .card-stat { transition: transform 0.2s, box-shadow 0.2s; }
+        .card-stat:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(236,72,153,0.15); }
+        .fade-in { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #fce7f3; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb { background: #ec4899; border-radius: 3px; }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .data-table th {
+            background: #fdf2f8;
+            padding: 12px 16px;
+            font-weight: 600;
+            font-size: 13px;
+            color: #be185d;
+            border-bottom: 2px solid #fbcfe8;
+            text-align: left;
+        }
+        .data-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #fce7f3;
+            font-size: 14px;
+        }
+        .data-table tr:hover td { background: #fdf2f8; }
+        
+        .badge-status {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-aktif { background: #d1fae5; color: #065f46; }
+        .badge-tidak-aktif { background: #fee2e2; color: #991b1b; }
+        .badge-hadir { background: #d1fae5; color: #065f46; }
+        .badge-izin { background: #fef3c7; color: #92400e; }
+        .badge-sakit { background: #dbeafe; color: #1e40af; }
+        .badge-alpha { background: #fee2e2; color: #991b1b; }
+        
+        .btn-action {
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .btn-delete { background: #fee2e2; color: #e11d48; }
+        .btn-delete:hover { background: #fecdd3; }
+    </style>
+</head>
+<body class="h-full bg-gradient-to-br from-pink-50 via-white to-pink-50 text-slate-800 overflow-hidden">
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="h-full flex items-center justify-center bg-gradient-to-br from-pink-600 via-pink-500 to-pink-700">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm mx-4 fade-in">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-gradient-to-br from-pink-100 to-pink-200 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <i data-lucide="shield-check" class="w-8 h-8 text-pink-600"></i>
+                </div>
+                <h1 class="text-xl font-bold text-slate-800">Payroll System</h1>
+                <p class="text-sm text-pink-600 mt-1 font-medium">PT Iskandar Anita</p>
+            </div>
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Username</label>
+                    <input id="username" type="text" value="hrd" class="w-full px-4 py-2.5 border border-pink-200 rounded-lg focus:ring-2 focus:ring-pink-500 outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Password</label>
+                    <input id="password" type="password" value="hrd123" class="w-full px-4 py-2.5 border border-pink-200 rounded-lg focus:ring-2 focus:ring-pink-500 outline-none transition">
+                </div>
+                <button type="submit" class="w-full bg-gradient-to-r from-pink-600 to-pink-500 text-white py-2.5 rounded-lg font-semibold hover:from-pink-700 hover:to-pink-600 transition shadow-md">
+                    <i data-lucide="log-in" class="w-4 h-4 inline mr-2"></i> Masuk
+                </button>
+                <p class="text-xs text-center text-slate-400">Demo: hrd / hrd123</p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="main-app" class="h-full flex hidden">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-white border-r border-pink-100 flex flex-col h-full shrink-0 shadow-lg">
+            <div class="p-5 border-b border-pink-100">
+                <h2 class="font-bold text-lg bg-gradient-to-r from-pink-600 to-pink-500 bg-clip-text text-transparent">Payroll System</h2>
+                <p class="text-xs text-pink-400 mt-0.5 font-medium">HRD Panel</p>
+            </div>
+            <nav class="flex-1 overflow-y-auto p-3 space-y-1">
+                <div class="sidebar-item active flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-sm font-medium transition" data-page="dashboard">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
+                </div>
+                <p class="text-xs text-pink-400 uppercase tracking-wider px-3 pt-4 pb-1 font-semibold">Data Master</p>
+                <div class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-sm font-medium transition" data-page="pegawai">
+                    <i data-lucide="users" class="w-4 h-4"></i> Pegawai
+                </div>
+                <div class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-sm font-medium transition" data-page="jabatan">
+                    <i data-lucide="briefcase" class="w-4 h-4"></i> Jabatan
+                </div>
+                <div class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-sm font-medium transition" data-page="absensi">
+                    <i data-lucide="calendar-check" class="w-4 h-4"></i> Absensi
+                </div>
+                <div class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-sm font-medium transition" data-page="periode">
+                    <i data-lucide="calendar" class="w-4 h-4"></i> Periode Gaji
+                </div>
+                <p class="text-xs text-pink-400 uppercase tracking-wider px-3 pt-4 pb-1 font-semibold">Penggajian</p>
+                <div class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-sm font-medium transition" data-page="generate">
+                    <i data-lucide="calculator" class="w-4 h-4"></i> Generate Gaji
+                </div>
+                <div class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-sm font-medium transition" data-page="data-gaji">
+                    <i data-lucide="receipt" class="w-4 h-4"></i> Data Gaji
+                </div>
+                <div class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-sm font-medium transition" data-page="potongan">
+                    <i data-lucide="minus-circle" class="w-4 h-4"></i> Potongan
+                </div>
+                <div class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-sm font-medium transition" data-page="tunjangan">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i> Tunjangan
+                </div>
+                <p class="text-xs text-pink-400 uppercase tracking-wider px-3 pt-4 pb-1 font-semibold">Pelaporan</p>
+                <div class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-sm font-medium transition" data-page="lap-gaji">
+                    <i data-lucide="file-text" class="w-4 h-4"></i> Laporan Gaji
+                </div>
+                <div class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-sm font-medium transition" data-page="lap-absensi">
+                    <i data-lucide="clipboard-list" class="w-4 h-4"></i> Laporan Absensi
+                </div>
+                <p class="text-xs text-pink-400 uppercase tracking-wider px-3 pt-4 pb-1 font-semibold">Sistem</p>
+                <div class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-sm font-medium transition" data-page="pengaturan">
+                    <i data-lucide="settings" class="w-4 h-4"></i> Pengaturan
+                </div>
+            </nav>
+            <div class="p-3 border-t border-pink-100">
+                <button id="btn-logout" class="w-full flex items-center gap-2 px-3 py-2 text-sm text-pink-600 hover:bg-pink-50 rounded-lg transition font-medium">
+                    <i data-lucide="log-out" class="w-4 h-4"></i> Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- Content -->
+        <main class="flex-1 flex flex-col h-full overflow-hidden">
+            <header class="bg-white/80 backdrop-blur-sm border-b border-pink-100 px-6 py-4 flex items-center justify-between shrink-0 shadow-sm">
+                <h1 id="page-title" class="text-lg font-bold text-slate-800">Dashboard</h1>
+                <div class="flex items-center gap-3">
+                    <span class="text-sm text-slate-500">HRD Admin</span>
+                    <div class="w-8 h-8 bg-gradient-to-r from-pink-100 to-pink-200 rounded-full flex items-center justify-center shadow-md">
+                        <i data-lucide="user" class="w-4 h-4 text-pink-600"></i>
+                    </div>
+                </div>
+            </header>
+            <div id="content-area" class="flex-1 overflow-y-auto p-6"></div>
+        </main>
+    </div>
+
+    <script>
+        // Data Awal
+        let allData = [];
+        let currentPage = 'dashboard';
+
+        function getByType(type) { return allData.filter(d => d.type === type); }
+        function formatRp(n) { return 'Rp ' + (n || 0).toLocaleString('id-ID'); }
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+        }
+
+        // Initialize Data
+        function initData() {
+            if (localStorage.getItem('payrollData')) {
+                allData = JSON.parse(localStorage.getItem('payrollData'));
+                return;
+            }
+            
+            allData = [
+                // Jabatan
+                { type: 'jabatan', name: 'Direktur Utama', gaji_pokok: 25000000, __backendId: 'jab1' },
+                { type: 'jabatan', name: 'Manager HRD', gaji_pokok: 12000000, __backendId: 'jab2' },
+                { type: 'jabatan', name: 'Manager Keuangan', gaji_pokok: 11000000, __backendId: 'jab3' },
+                { type: 'jabatan', name: 'Manager IT', gaji_pokok: 10000000, __backendId: 'jab4' },
+                { type: 'jabatan', name: 'Manager Marketing', gaji_pokok: 9000000, __backendId: 'jab5' },
+                { type: 'jabatan', name: 'Staff HRD', gaji_pokok: 6000000, __backendId: 'jab6' },
+                { type: 'jabatan', name: 'Staff IT', gaji_pokok: 5500000, __backendId: 'jab7' },
+                { type: 'jabatan', name: 'Staff Accounting', gaji_pokok: 5000000, __backendId: 'jab8' },
+                { type: 'jabatan', name: 'Staff Marketing', gaji_pokok: 4500000, __backendId: 'jab9' },
+                { type: 'jabatan', name: 'Office Boy', gaji_pokok: 3500000, __backendId: 'jab10' },
+                { type: 'jabatan', name: 'Security', gaji_pokok: 3800000, __backendId: 'jab11' },
+                { type: 'jabatan', name: 'Driver', gaji_pokok: 4000000, __backendId: 'jab12' },
+                
+                // Pegawai
+                { type: 'pegawai', nip: 'PG-001', name: 'Budi Santoso', jabatan: 'Direktur Utama', gaji_pokok: 25000000, status: 'aktif', email: 'budi@iskandarabil.com', no_telp: '081234567890', tanggal_bergabung: '2020-01-15', __backendId: 'pgw1' },
+                { type: 'pegawai', nip: 'PG-002', name: 'Siti Nurhaliza', jabatan: 'Manager HRD', gaji_pokok: 12000000, status: 'aktif', email: 'siti@iskandarabil.com', no_telp: '081234567891', tanggal_bergabung: '2021-03-10', __backendId: 'pgw2' },
+                { type: 'pegawai', nip: 'PG-003', name: 'Ahmad Wijaya', jabatan: 'Staff HRD', gaji_pokok: 6000000, status: 'aktif', email: 'ahmad@iskandarabil.com', no_telp: '081234567892', tanggal_bergabung: '2022-06-20', __backendId: 'pgw3' },
+                { type: 'pegawai', nip: 'PG-004', name: 'Rini Kusuma', jabatan: 'Manager Keuangan', gaji_pokok: 11000000, status: 'aktif', email: 'rini@iskandarabil.com', no_telp: '081234567893', tanggal_bergabung: '2021-08-05', __backendId: 'pgw4' },
+                { type: 'pegawai', nip: 'PG-005', name: 'Hendra Sutrisno', jabatan: 'Staff Accounting', gaji_pokok: 5000000, status: 'aktif', email: 'hendra@iskandarabil.com', no_telp: '081234567894', tanggal_bergabung: '2023-01-10', __backendId: 'pgw5' },
+                { type: 'pegawai', nip: 'PG-006', name: 'Dewi Cahyanti', jabatan: 'Staff Accounting', gaji_pokok: 5000000, status: 'aktif', email: 'dewi@iskandarabil.com', no_telp: '081234567895', tanggal_bergabung: '2023-02-15', __backendId: 'pgw6' },
+                { type: 'pegawai', nip: 'PG-007', name: 'Eko Prasetyo', jabatan: 'Manager IT', gaji_pokok: 10000000, status: 'aktif', email: 'eko@iskandarabil.com', no_telp: '081234567896', tanggal_bergabung: '2020-11-01', __backendId: 'pgw7' },
+                { type: 'pegawai', nip: 'PG-008', name: 'Mega Setiawan', jabatan: 'Staff IT', gaji_pokok: 5500000, status: 'aktif', email: 'mega@iskandarabil.com', no_telp: '081234567897', tanggal_bergabung: '2022-09-12', __backendId: 'pgw8' },
+                { type: 'pegawai', nip: 'PG-009', name: 'Fajar Nugroho', jabatan: 'Staff IT', gaji_pokok: 5500000, status: 'cuti', email: 'fajar@iskandarabil.com', no_telp: '081234567898', tanggal_bergabung: '2023-03-20', __backendId: 'pgw9' },
+                { type: 'pegawai', nip: 'PG-010', name: 'Lisna Handayani', jabatan: 'Manager Marketing', gaji_pokok: 9000000, status: 'aktif', email: 'lisna@iskandarabil.com', no_telp: '081234567899', tanggal_bergabung: '2021-05-18', __backendId: 'pgw10' },
+                { type: 'pegawai', nip: 'PG-011', name: 'Rahmat Hidayat', jabatan: 'Staff Marketing', gaji_pokok: 4500000, status: 'aktif', email: 'rahmat@iskandarabil.com', no_telp: '081234567900', tanggal_bergabung: '2023-07-01', __backendId: 'pgw11' },
+                { type: 'pegawai', nip: 'PG-012', name: 'Nadia Putri', jabatan: 'Staff Marketing', gaji_pokok: 4500000, status: 'aktif', email: 'nadia@iskandarabil.com', no_telp: '081234567901', tanggal_bergabung: '2023-07-15', __backendId: 'pgw12' },
+                { type: 'pegawai', nip: 'PG-013', name: 'Bambang Susanto', jabatan: 'Office Boy', gaji_pokok: 3500000, status: 'aktif', email: 'bambang@iskandarabil.com', no_telp: '081234567902', tanggal_bergabung: '2022-12-01', __backendId: 'pgw13' },
+                { type: 'pegawai', nip: 'PG-014', name: 'Slamet Riyadi', jabatan: 'Security', gaji_pokok: 3800000, status: 'aktif', email: 'slamet@iskandarabil.com', no_telp: '081234567903', tanggal_bergabung: '2022-10-10', __backendId: 'pgw14' },
+                { type: 'pegawai', nip: 'PG-015', name: 'Agus Salim', jabatan: 'Driver', gaji_pokok: 4000000, status: 'aktif', email: 'agus@iskandarabil.com', no_telp: '081234567904', tanggal_bergabung: '2023-04-20', __backendId: 'pgw15' },
+                
+                // Tunjangan
+                { type: 'tunjangan', name: 'Tunjangan Kesehatan', tunjangan: 500000, __backendId: 'tunj1' },
+                { type: 'tunjangan', name: 'Tunjangan Transportasi', tunjangan: 1000000, __backendId: 'tunj2' },
+                { type: 'tunjangan', name: 'Tunjangan Makan', tunjangan: 800000, __backendId: 'tunj3' },
+                
+                // Potongan
+                { type: 'potongan', name: 'Pajak Penghasilan (PPh21)', potongan: 500000, __backendId: 'pot1' },
+                { type: 'potongan', name: 'Iuran BPJS Kesehatan', potongan: 200000, __backendId: 'pot2' },
+                { type: 'potongan', name: 'Iuran BPJS Ketenagakerjaan', potongan: 100000, __backendId: 'pot3' },
+                
+                // Periode
+                { type: 'periode', periode: '2024-01', __backendId: 'per1' },
+                { type: 'periode', periode: '2024-02', __backendId: 'per2' },
+                { type: 'periode', periode: '2024-03', __backendId: 'per3' },
+                { type: 'periode', periode: '2024-04', __backendId: 'per4' },
+                { type: 'periode', periode: '2024-05', __backendId: 'per5' },
+                { type: 'periode', periode: '2024-06', __backendId: 'per6' },
+                
+                // Absensi
+                { type: 'absensi', name: 'Budi Santoso', nip: 'PG-001', tanggal: '2024-06-03', check_in: '08:00', check_out: '17:00', status: 'Hadir', __backendId: 'abs1' },
+                { type: 'absensi', name: 'Siti Nurhaliza', nip: 'PG-002', tanggal: '2024-06-03', check_in: '08:15', check_out: '17:00', status: 'Hadir', __backendId: 'abs2' },
+                { type: 'absensi', name: 'Ahmad Wijaya', nip: 'PG-003', tanggal: '2024-06-03', check_in: '08:00', check_out: '17:00', status: 'Hadir', __backendId: 'abs3' },
+                { type: 'absensi', name: 'Rini Kusuma', nip: 'PG-004', tanggal: '2024-06-03', check_in: '', check_out: '', status: 'Izin', __backendId: 'abs4' },
+                { type: 'absensi', name: 'Eko Prasetyo', nip: 'PG-007', tanggal: '2024-06-03', check_in: '07:55', check_out: '17:00', status: 'Hadir', __backendId: 'abs5' },
+                { type: 'absensi', name: 'Fajar Nugroho', nip: 'PG-009', tanggal: '2024-06-03', check_in: '', check_out: '', status: 'Sakit', __backendId: 'abs6' },
+                { type: 'absensi', name: 'Lisna Handayani', nip: 'PG-010', tanggal: '2024-06-03', check_in: '08:10', check_out: '17:00', status: 'Hadir', __backendId: 'abs7' },
+                { type: 'absensi', name: 'Bambang Susanto', nip: 'PG-013', tanggal: '2024-06-03', check_in: '07:30', check_out: '16:00', status: 'Hadir', __backendId: 'abs8' },
+                { type: 'absensi', name: 'Slamet Riyadi', nip: 'PG-014', tanggal: '2024-06-03', check_in: '07:00', check_out: '16:00', status: 'Hadir', __backendId: 'abs9' },
+                { type: 'absensi', name: 'Agus Salim', nip: 'PG-015', tanggal: '2024-06-03', check_in: '06:30', check_out: '15:00', status: 'Hadir', __backendId: 'abs10' },
+            ];
+            localStorage.setItem('payrollData', JSON.stringify(allData));
+        }
+
+        async function createRecord(data) {
+            const newRecord = { ...data, __backendId: Date.now() + '-' + Math.random() };
+            allData.push(newRecord);
+            localStorage.setItem('payrollData', JSON.stringify(allData));
+            return newRecord;
+        }
+
+        async function deleteRecord(record) {
+            const index = allData.findIndex(d => d.__backendId === record.__backendId);
+            if (index !== -1) {
+                allData.splice(index, 1);
+                localStorage.setItem('payrollData', JSON.stringify(allData));
+            }
+        }
+
+        // Login
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const u = document.getElementById('username').value;
+            const p = document.getElementById('password').value;
+            initData();
+            if (u === 'hrd' && p === 'hrd123') {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('main-app').classList.remove('hidden');
+                renderDashboard();
+                lucide.createIcons();
+            } else {
+                alert('Username atau password salah!');
+            }
+        });
+
+        document.getElementById('btn-logout').addEventListener('click', () => {
+            document.getElementById('main-app').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
+        });
+
+        // Navigation
+        document.querySelectorAll('.sidebar-item[data-page]').forEach(item => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                currentPage = item.dataset.page;
+                document.getElementById('page-title').textContent = item.textContent.trim();
+                renderPage(currentPage);
+                lucide.createIcons();
+            });
+        });
+
+        function showToast(message, isError = false) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-4 right-4 px-4 py-2 rounded-lg shadow-lg text-white text-sm z-50 fade-in';
+            toast.style.background = isError ? '#db2777' : '#ec4899';
+            toast.innerHTML = `<i data-lucide="${isError ? 'alert-circle' : 'check-circle'}" class="w-4 h-4 inline mr-2"></i>${message}`;
+            document.body.appendChild(toast);
+            lucide.createIcons();
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // Render Dashboard
+        function renderDashboard() {
+            const pegawai = getByType('pegawai');
+            const absensi = getByType('absensi');
+            const gaji = getByType('gaji');
+            const totalGaji = gaji.reduce((s, g) => s + (g.total_gaji || 0), 0);
+            const hadir = absensi.filter(a => a.status === 'Hadir').length;
+            const izin = absensi.filter(a => a.status === 'Izin').length;
+            const sakit = absensi.filter(a => a.status === 'Sakit').length;
+            
+            const content = document.getElementById('content-area');
+            content.innerHTML = `
+                <div class="fade-in">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
+                        <div class="card-stat bg-white rounded-xl p-5 border border-pink-100 shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <div><p class="text-sm text-slate-500">Total Pegawai</p><p class="text-2xl font-bold">${pegawai.length}</p></div>
+                                <div class="w-10 h-10 bg-gradient-to-r from-pink-100 to-pink-200 rounded-lg flex items-center justify-center"><i data-lucide="users" class="w-5 h-5 text-pink-600"></i></div>
+                            </div>
+                        </div>
+                        <div class="card-stat bg-white rounded-xl p-5 border border-pink-100 shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <div><p class="text-sm text-slate-500">Jabatan</p><p class="text-2xl font-bold">${getByType('jabatan').length}</p></div>
+                                <div class="w-10 h-10 bg-gradient-to-r from-green-100 to-green-200 rounded-lg flex items-center justify-center"><i data-lucide="briefcase" class="w-5 h-5 text-green-600"></i></div>
+                            </div>
+                        </div>
+                        <div class="card-stat bg-white rounded-xl p-5 border border-pink-100 shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <div><p class="text-sm text-slate-500">Data Gaji</p><p class="text-2xl font-bold">${gaji.length}</p></div>
+                                <div class="w-10 h-10 bg-gradient-to-r from-amber-100 to-amber-200 rounded-lg flex items-center justify-center"><i data-lucide="receipt" class="w-5 h-5 text-amber-600"></i></div>
+                            </div>
+                        </div>
+                        <div class="card-stat bg-white rounded-xl p-5 border border-pink-100 shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <div><p class="text-sm text-slate-500">Total Pengeluaran</p><p class="text-xl font-bold">${formatRp(totalGaji)}</p></div>
+                                <div class="w-10 h-10 bg-gradient-to-r from-rose-100 to-rose-200 rounded-lg flex items-center justify-center"><i data-lucide="trending-up" class="w-5 h-5 text-rose-600"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
+                        <div class="bg-white rounded-xl border border-pink-100 p-5 shadow-sm">
+                            <h3 class="font-semibold mb-4">Ringkasan Absensi Hari Ini</h3>
+                            <div class="grid grid-cols-3 gap-3">
+                                <div class="bg-green-50 rounded-lg p-3 text-center"><p class="text-2xl font-bold text-green-700">${hadir}</p><p class="text-xs text-green-600">Hadir</p></div>
+                                <div class="bg-yellow-50 rounded-lg p-3 text-center"><p class="text-2xl font-bold text-yellow-700">${izin}</p><p class="text-xs text-yellow-600">Izin</p></div>
+                                <div class="bg-blue-50 rounded-lg p-3 text-center"><p class="text-2xl font-bold text-blue-700">${sakit}</p><p class="text-xs text-blue-600">Sakit</p></div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl border border-pink-100 p-5 shadow-sm">
+                            <h3 class="font-semibold mb-4">Distribusi Pegawai per Jabatan</h3>
+                            <div class="space-y-2 max-h-60 overflow-y-auto">
+                                ${getByType('jabatan').slice(0,8).map(j => {
+                                    const count = pegawai.filter(p => p.jabatan === j.name).length;
+                                    const percent = pegawai.length > 0 ? Math.round((count / pegawai.length) * 100) : 0;
+                                    return `<div class="flex items-center gap-2">
+                                        <div class="w-32 text-sm">${j.name}</div>
+                                        <div class="flex-1 bg-pink-100 rounded-full h-2"><div class="bg-pink-500 h-full rounded-full" style="width:${percent}%"></div></div>
+                                        <div class="w-12 text-sm font-medium">${count}</div>
+                                    </div>`;
+                                }).join('')}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl border border-pink-100 p-5 shadow-sm">
+                        <h3 class="font-semibold mb-3">📋 Daftar Pegawai</h3>
+                        <div class="overflow-x-auto">
+                            <table class="data-table">
+                                <thead><tr><th>No</th><th>NIP</th><th>Nama</th><th>Jabatan</th><th>Email</th><th>Status</th><th>Gaji Pokok</th></tr></thead>
+                                <tbody>
+                                    ${pegawai.slice(0,10).map((p, i) => `
+                                        <tr><td>${i+1}</td><td>${p.nip}</td><td class="font-medium">${p.name}</td><td>${p.jabatan}</td><td class="text-sm">${p.email || '-'}</td>
+                                        <td><span class="badge-status ${p.status === 'aktif' ? 'badge-aktif' : 'badge-tidak-aktif'}">${p.status === 'aktif' ? 'Aktif' : 'Tidak Aktif'}</span></td>
+                                        <td class="text-pink-600 font-semibold">${formatRp(p.gaji_pokok)}</td></tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render Pegawai
+        function renderPegawai() {
+            const data = getByType('pegawai');
+            const jabatanList = getByType('jabatan');
+            const content = document.getElementById('content-area');
+            content.innerHTML = `
+                <div class="fade-in">
+                    <div class="bg-white rounded-xl border border-pink-100 p-5 shadow-sm mb-5">
+                        <h3 class="font-semibold mb-4 flex items-center gap-2"><i data-lucide="user-plus" class="w-5 h-5 text-pink-600"></i> Tambah Pegawai</h3>
+                        <form id="form-pegawai" class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                            <input id="nip" placeholder="NIP" class="px-3 py-2 border border-pink-200 rounded-lg text-sm">
+                            <input id="nama" placeholder="Nama Lengkap" class="px-3 py-2 border border-pink-200 rounded-lg text-sm">
+                            <select id="jabatan" class="px-3 py-2 border border-pink-200 rounded-lg text-sm">
+                                <option value="">Pilih Jabatan</option>${jabatanList.map(j => `<option value="${j.name}" data-gaji="${j.gaji_pokok}">${j.name}</option>`).join('')}
+                            </select>
+                            <input id="email" placeholder="Email" class="px-3 py-2 border border-pink-200 rounded-lg text-sm">
+                            <input id="no_telp" placeholder="No. Telepon" class="px-3 py-2 border border-pink-200 rounded-lg text-sm">
+                            <input id="tgl_bergabung" type="date" class="px-3 py-2 border border-pink-200 rounded-lg text-sm">
+                            <select id="status" class="px-3 py-2 border border-pink-200 rounded-lg text-sm"><option value="aktif">Aktif</option><option value="tidak-aktif">Tidak Aktif</option></select>
+                            <button type="submit" class="bg-pink-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-pink-700">Simpan</button>
+                        </form>
+                    </div>
+                    <div class="bg-white rounded-xl border border-pink-100 p-5 shadow-sm">
+                        <h3 class="font-semibold mb-3">📋 Data Pegawai (${data.length})</h3>
+                        <div class="overflow-x-auto"><table class="data-table"><thead><tr><th>No</th><th>NIP</th><th>Nama</th><th>Jabatan</th><th>Email</th><th>Status</th><th>Aksi</th></tr></thead>
+                        <tbody>${data.map((p, i) => `<tr><td>${i+1}</td><td>${p.nip}</td><td class="font-medium">${p.name}</td><td>${p.jabatan}</td><td class="text-sm">${p.email || '-'}</td>
+                        <td><span class="badge-status ${p.status === 'aktif' ? 'badge-aktif' : 'badge-tidak-aktif'}">${p.status === 'aktif' ? 'Aktif' : 'Tidak Aktif'}</span></td>
+                        <td><button class="btn-action btn-delete" onclick="deleteItem('${p.__backendId}')">Hapus</button></td></tr>`).join('')}</tbody></table></div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('form-pegawai').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const sel = document.getElementById('jabatan');
+                const gaji = sel.options[sel.selectedIndex]?.dataset.gaji || 0;
+                await createRecord({ type: 'pegawai', nip: document.getElementById('nip').value, name: document.getElementById('nama').value, jabatan: document.getElementById('jabatan').value, gaji_pokok: Number(gaji), email: document.getElementById('email').value, no_telp: document.getElementById('no_telp').value, tanggal_bergabung: document.getElementById('tgl_bergabung').value, status: document.getElementById('status').value });
+                showToast('Pegawai ditambahkan!'); renderPage('pegawai');
+            });
+        }
+
+        // Render Jabatan
+        function renderJabatan() {
+            const data = getByType('jabatan');
+            const content = document.getElementById('content-area');
+            content.innerHTML = `
+                <div class="fade-in">
+                    <div class="bg-white rounded-xl border border-pink-100 p-5 shadow-sm mb-5">
+                        <h3 class="font-semibold mb-4">Tambah Jabatan</h3>
+                        <form id="form-jabatan" class="flex gap-3">
+                            <input id="nama_jabatan" placeholder="Nama Jabatan" class="flex-1 px-3 py-2 border border-pink-200 rounded-lg text-sm">
+                            <input id="gaji_pokok" type="number" placeholder="Gaji Pokok" class="w-48 px-3 py-2 border border-pink-200 rounded-lg text-sm">
+                            <button type="submit" class="bg-pink-600 text-white px-4 py-2 rounded-lg text-sm font-medium">Tambah</button>
+                        </form>
+                    </div>
+                    <div class="bg-white rounded-xl border border-pink-100 p-5 shadow-sm">
+                        <h3 class="font-semibold mb-3">📋 Daftar Jabatan (${data.length})</h3>
+                        <div class="overflow-x-auto"><table class="data-table"><thead><tr><th>No</th><th>Nama Jabatan</th><th>Gaji Pokok</th><th>Aksi</th></tr></thead>
+                        <tbody>${data.map((j, i) => `<tr><td>${i+1}</td><td class="font-medium">${j.name}</td><td class="text-pink-600 font-semibold">${formatRp(j.gaji_pokok)}</td><td><button class="btn-action btn-delete" onclick="deleteItem('${j.__backendId}')">Hapus</button></td></tr>`).join('')}</tbody></table></div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('form-jabatan').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await createRecord({ type: 'jabatan', name: document.getElementById('nama_jabatan').value, gaji_pokok: Number(document.getElementById('gaji_pokok').value) || 0 });
+                showToast('Jabatan ditambahkan!'); renderPage('jabatan');
+            });
+        }
+
+        // Render Absensi
+        function renderAbsensi() {
+            const pegawai = getByType('pegawai');
+            const absensi = getByType('absensi');
+            const content = document.getElementById('content-area');
+            content.innerHTML = `
+                <div class="fade-in">
+                    <div class="bg-white rounded-xl border border-pink-100 p-5 shadow-sm mb-5">
+                        <h3 class="font-semibold mb-4">Input Absensi</h3>
+                        <form id="form-absensi" class="grid grid-cols-1 md:grid-cols-5 gap-3">
+                            <select id="nama_pegawai" class="px-3 py-2 border border-pink-200 rounded-lg text-sm"><option value="">Pilih Pegawai</option>${pegawai.map(p => `<option value="${p.name}" data-nip="${p.nip}">${p.name}</option>`).join('')}</select>
+                            <input id="tanggal" type="date" class="px-3 py-2 border border-pink-200 rounded-lg text-sm">
+                            <input id="check_in" type="time" placeholder="Check In" class="px-3 py-2 border border-pink-200 rounded-lg text-sm">
+                            <input id="check_out" type="time" placeholder="Check Out" class="px-3 py-2 border border-pink-200 rounded-lg text-sm">
+                            <select id="status_absensi" class="px-3 py-2 border border-pink-200 rounded-lg text-sm"><option value="Hadir">Hadir</option><option value="Izin">Izin</option><option value="Sakit">Sakit</option><option value="Alpha">Alpha</option></select>
+                            <button type="submit" class="bg-pink-600 text-white py-2 rounded-lg text-sm font-medium">Simpan</button>
+                        </form>
+                    </div>
+                    <div class="bg-white rounded-xl border border-pink-100 p-5 shadow-sm">
+                        <h3 class="font-semibold mb-3">📋 Data Absensi (${absensi.length})</h3>
+                        <div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Tanggal</th><th>Nama</th><th>Check In</th><th>Check Out</th><th>Status</th><th>Aksi</th></tr></thead>
+                        <tbody>${absensi.map(a => `<tr><td>${a.tanggal}</td><td class="font-medium">${a.name}</td><td>${a.check_in || '-'}</td><td>${a.check_out || '-'}</td><td><span class="badge-status ${a.status === 'Hadir' ? 'badge-aktif' : a.status === 'Sakit' ? 'badge-sakit' : 'badge-izin'}">${a.status}</span></td><td><button class="btn-action btn-delete" onclick="deleteItem('${a.__backendId}')">Hapus</button></td></tr>`).join('')}</tbody></table></div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('form-absensi').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const sel = document.getElementById('nama_pegawai');
+                const nip = sel.options[sel.selectedIndex]?.dataset.nip || '';
+                await createRecord({ type: 'absensi', name: document.getElementById('nama_pegawai').value, nip: nip, tanggal: document.getElementById('tanggal').value, check_in: document.getElementById('check_in').value, check_out: document.getElementById('check_out').value, status: document.getElementById('status_absensi').value });
+                showToast('Absensi disimpan!'); renderPage('absensi');
+            });
+        }
+
+        // Render Periode
+        function renderPeriode() {
+            const data = getByType('periode');
+            const content = document.getElementById('content-area');
+            content.innerHTML = `
+                <div class="fade-in">
+                    <div class="bg-white rounded-xl border border-pink-100 p-5 shadow-sm mb-5">
+                        <h3 class="font-semibold mb-4">Tambah Periode</h3>
+                        <form id="form-periode" class="flex gap-3">
+                            <input id="periode" type="month" class="flex-1 px-3 py-2 border border-pink-200 rounded-lg text-sm">
+                            <button type="submit" class="bg-pink-600 text-white px-4 py-2 rounded-lg text-sm font-medium">Tambah</button>
+                        </form>
+                    </div>
+                    <div class="bg-white rounded-xl border border-pink-100 p-5 shadow-sm">
+                        <h3 class="font-semibold mb-3">📋 Daftar Periode (${data.length})</h3>
+                        <div class="flex flex-wrap gap-2">${data.map(p => `<div class="px-3 py-2 bg-pink-50 rounded-lg flex items-center gap-2"><span>${p.periode}</span><button class="text-red-500 text-xs" onclick="deleteItem('${p.__backendId}')">✕</button></div>`).join('')}</div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('form-periode').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await createRecord({ type: 'periode', periode: document.getElementById('periode').value });
+                showToast('Periode ditambahkan!'); renderPage('periode');
+            });
+        }
+
+        // Generate Gaji
+        function renderGenerate() {
+            const pegawai = getByType('pegawai');
+            const periode = getByType('periode');
+            const tunjangan = getByType('tunjangan');
+            const potongan = getByType('potongan');
+            const totalTunjangan = tunjangan.reduce((s, t) => s + (t.tunjangan || 0), 0);
+            const totalPotongan = potongan.reduce((s, t) => s + (t.potongan || 0), 0);
+            const content = document.getElementById('content-area');
+            content.innerHTML = `
+                <div class="fade-in">
+                    <div class="bg-white rounded-xl border border-pink-100 p-5 shadow-sm">
+                        <h3 class="font-semibold mb-4">Generate Gaji</h3>
+                        <div class="bg-pink-50 rounded-lg p-3 mb-4 text-sm">
+                            <div class="flex justify-between"><span>Total Tunjangan:</span><span class="text-green-600 font-semibold">${formatRp(totalTunjangan)}</span></div>
+                            <div class="flex justify-between"><span>Total Potongan:</span><span class="text-red-600 font-semibold">${formatRp(totalPotongan)}</span></div>
+                        </div>
+                        <form id="form-generate" class="space-y-3">
+                            <select id="periode_gaji" class="w-full px-3 py-2 border border-pink-200 rounded-lg"><option value="">Pilih Periode</option>${periode.map(p => `<option value="${p.periode}">${p.periode}</option>`).join('')}</select>
+                            <button type="submit" class="w-full bg-pink-600 text-white py-2 rounded-lg font-semibold hover:bg-pink-700">Generate Gaji</button>
+                        </form>
+                        <div id="gen-result" class="mt-3"></div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('form-generate').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const periode = document.getElementById('periode_gaji').value;
+                if (!periode) { showToast('Pilih periode!', true); return; }
+                const existing = getByType('gaji').filter(g => g.periode === periode);
+                for (const g of existing) await deleteRecord(g);
+                const tunj = getByType('tunjangan').reduce((s, t) => s + (t.tunjangan || 0), 0);
+                const pot = getByType('potongan').reduce((s, t) => s + (t.potongan || 0), 0);
+                for (const p of pegawai.filter(p => p.status === 'aktif')) {
+                    const total = (p.gaji_pokok || 0) + tunj - pot;
+                    await createRecord({ type: 'gaji', name: p.name, nip: p.nip, jabatan: p.jabatan, gaji_pokok: p.gaji_pokok, tunjangan: tunj, potongan: pot, total_gaji: total, periode: periode, status: 'Dibayar', tanggal: new Date().toISOString().split('T')[0] });
+                }
+                document.getElementById('gen-result').innerHTML = `<p class="text-green-600 text-sm bg-green-50 p-2 rounded-lg">✓ Berhasil generate gaji ${pegawai.filter(p => p.status === 'aktif').length} pegawai</p>`;
+                showToast('Gaji berhasil digenerate!');
+            });
+        }
+
+        // Data Gaji
+        function renderDataGaji() {
+            const data = getByType('gaji');
+            const content = document.getElementById('content-area');
+            content.innerHTML = `
+                <div class="fade-in">
+                    <div class="bg-white rounded-xl border border-pink-100 p-5 shadow-sm">
+                        <h3 class="font-semibold mb-3">📋 Data Gaji (${data.length})</h3>
+                        ${data.length === 0 ? '<p class="text-slate-400 text-center py-8">Belum ada data. Generate gaji terlebih dahulu.</p>' : `
+                        <div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Nama</th><th>Periode</th><th>Gaji Pokok</th><th>Tunjangan</th><th>Potongan</th><th>Total</th><th>Aksi</th></tr></thead>
+                        <tbody>${data.map(g => `<tr><td class="font-medium">${g.name}</td><td>${g.periode}</td><td>${formatRp(g.gaji_pokok)}</td><td class="text-green-600">${formatRp(g.tunjangan)}</td><td class="text-red-600">${formatRp(g.potongan)}</td><td class="font-bold text-pink-600">${formatRp(g.total_gaji)}</td><td><button class="btn-action btn-delete" onclick="deleteItem('${g.__backendId}')">Hapus</button></td></tr>`).join('')}</tbody></table></div>`}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Potongan
+        function renderPotongan() {
+            const data = getByType('potongan');
+            const content = document.getElementById('content-area');
+            content.innerHTML = `
+                <div class="fade-in">
+                    <div class="bg-white rounded-xl border border-pink-100 p-5 shadow-sm mb-5">
+                        <h3 class="font-semibold mb-4">Tambah Potongan</h3>
+                        <form id="form-potongan" class="flex gap-3">
+                            <input id="nama_potongan" placeholder="Nama Potongan" class="flex-1 px-3 py-2 border border-pink-200 rounded-lg text-sm">
+                            <input id="jumlah_potongan" type="number" placeholder="Jumlah" class="w-48 px-3 py-2 border border-pink-200 rounded-lg text-sm">
+                            <button type="submit" class="bg-pink-600 text-white px-4 py-2 rounded-lg text-sm font-medium">Tambah</button>
+                        </form>
+                    </div>
+                    <div class="bg-white rounded-xl border border-pink-100 p-5 shadow-sm">
+                        <h3 class="font-semibold mb-3">📋 Daftar Potongan</h3>
+                        <div class="space-y-2">${data.map(p => `<div class="flex justify-between items-center p-3 bg-pink-50 rounded-lg"><span>${p.name}</span><span class="text-red-600 font-semibold">${formatRp(p.potongan)}</span><button class="text-red-500 text-xs" onclick="deleteItem('${p.__backendId}')">Hapus</button></div>`).join('')}</div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('form-potongan').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await createRecord({ type: 'potongan', name: document.getElementById('nama_potongan').value, potongan: Number(document.getElementById('jumlah_potongan').value) || 0 });
+                showToast('Potongan ditambahkan!'); renderPage('potongan');
+            });
+        }
+
+        // Tunjangan
+        function renderTunjangan() {
+            const data = getByType('tunjangan');
+            const content = document.getElementById('content-area');
+            content.innerHTML = `
+                <div class="fade-in">
+                    <div class="bg-white rounded-xl border border-pink-100 p-5 shadow-sm mb-5">
+                        <h3 class="font-semibold mb-4">Tambah Tunjangan</h3>
+                        <form id="form-tunjangan" class="flex gap-3">
+                            <input id="nama_tunjangan" placeholder="Nama Tunjangan" class="flex-1 px-3 py-2 border border-pink-200 rounded-lg text-sm">
+                            <input id="jumlah_tunjangan" type="number" placeholder="Jumlah" class="w-48 px-3 py-2 border border-pink-200 rounded-lg text-sm">
+                            <button type="submit" class="bg-pink-600 text-white px-4 py-2 rounded-lg text-sm font-medium">Tambah</button>
+                        </form>
+                    </div>
+                    <div class="bg-white rounded-xl border border-pink-100 p-5 shadow-sm">
+                        <h3 class="font-semibold mb-3">📋 Daftar Tunjangan</h3>
+                        <div class="space-y-2">${data.map(t => `<div class="flex justify-between items-center p-3 bg-pink-50 rounded-lg"><span>${t.name}</span><span class="text-green-600 font-semibold">${formatRp(t.tunjangan)}</span><button class="text-red-500 text-xs" onclick="deleteItem('${t.__backendId}')">Hapus</button></div>`).join('')}</div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('form-tunjangan').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await createRecord({ type: 'tunjangan', name: document.getElementById('nama_tunjangan').value, tunjangan: Number(document.getElementById('jumlah_tunjangan').value) || 0 });
+                showToast('Tunjangan ditambahkan!'); renderPage('tunjangan');
+            });
+        }
+
+        // Laporan Gaji
+        function renderLapGaji() {
+            const data = getByType('gaji');
+            const totalAll = data.reduce((s, g) => s + (g.total_gaji || 0), 0);
+            const content = document.getElementById('content-area');
+            content.innerHTML = `
+                <div class="fade-in">
+                    <div class="bg-white rounded-xl border border-pink-100 p-5 shadow-sm">
+                        <div class="flex justify-between items-center mb-4"><h3 class="font-semibold">📊 Laporan Gaji</h3><span class="text-sm bg-pink-100 text-pink-700 px-3 py-1 rounded-full font-semibold">Total: ${formatRp(totalAll)}</span></div>
+                        ${data.length === 0 ? '<p class="text-slate-400 text-center py-8">Belum ada data gaji.</p>' : `
+                        <div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Nama</th><th>Jabatan</th><th>Periode</th><th>Gaji Pokok</th><th>Tunjangan</th><th>Potongan</th><th>Total</th></tr></thead>
+                        <tbody>${data.map(g => `<tr><td class="font-medium">${g.name}</td><td>${g.jabatan}</td><td>${g.periode}</td><td>${formatRp(g.gaji_pokok)}</td><td class="text-green-600">${formatRp(g.tunjangan)}</td><td class="text-red-600">${formatRp(g.potongan)}</td><td class="font-bold text-pink-600">${formatRp(g.total_gaji)}</td></tr>`).join('')}</tbody></table></div>`}
+                        <button onclick="window.print()" class="mt-4 bg-pink-600 text-white px-4 py-2 rounded-lg text-sm font-medium"><i data-lucide="printer" class="w-4 h-4 inline mr-2"></i> Cetak Laporan</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Laporan Absensi
+        function renderLapAbsensi() {
+            const data = getByType('absensi');
+            const hadir = data.filter(d => d.status === 'Hadir').length;
+            const izin = data.filter(d => d.status === 'Izin').length;
+            const sakit = data.filter(d => d.status === 'Sakit').length;
+            const content = document.getElementById('content-area');
+            content.innerHTML = `
+                <div class="fade-in">
+                    <div class="grid grid-cols-3 gap-3 mb-4"><div class="bg-green-50 p-3 text-center rounded-lg"><p class="text-2xl font-bold text-green-700">${hadir}</p><p class="text-xs">Hadir</p></div>
+                    <div class="bg-yellow-50 p-3 text-center rounded-lg"><p class="text-2xl font-bold text-yellow-700">${izin}</p><p class="text-xs">Izin</p></div>
+                    <div class="bg-blue-50 p-3 text-center rounded-lg"><p class="text-2xl font-bold text-blue-700">${sakit}</p><p class="text-xs">Sakit</p></div></div>
+                    <div class="bg-white rounded-xl border border-pink-100 p-5 shadow-sm">
+                        <h3 class="font-semibold mb-3">📊 Laporan Absensi</h3>
+                        ${data.length === 0 ? '<p class="text-slate-400 text-center py-8">Belum ada data absensi.</p>' : `
+                        <div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Tanggal</th><th>Nama</th><th>Status</th></tr></thead>
+                        <tbody>${data.map(a => `<tr><td>${a.tanggal}</td><td class="font-medium">${a.name}</td><td><span class="badge-status ${a.status === 'Hadir' ? 'badge-aktif' : a.status === 'Sakit' ? 'badge-sakit' : 'badge-izin'}">${a.status}</span></td></tr>`).join('')}</tbody></table></div>`}
+                        <button onclick="window.print()" class="mt-4 bg-pink-600 text-white px-4 py-2 rounded-lg text-sm font-medium"><i data-lucide="printer" class="w-4 h-4 inline mr-2"></i> Cetak Laporan</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Pengaturan
+        function renderPengaturan() {
+            const content = document.getElementById('content-area');
+            content.innerHTML = `
+                <div class="fade-in">
+                    <div class="bg-white rounded-xl border border-pink-100 p-5 shadow-sm">
+                        <h3 class="font-semibold mb-4">⚙️ Pengaturan Sistem</h3>
+                        <div class="space-y-4"><div class="flex justify-between py-3 border-b"><div><p class="font-medium">Nama Aplikasi</p><p class="text-xs text-slate-400">Payroll Management System</p></div><span class="text-pink-600 font-semibold">v2.0.0</span></div>
+                        <div class="flex justify-between py-3 border-b"><div><p class="font-medium">Perusahaan</p><p class="text-xs text-slate-400">PT Iskandar Anita</p></div><span class="text-pink-600">✅ Terdaftar</span></div>
+                        <div class="flex justify-between py-3"><div><p class="font-medium">Tema</p><p class="text-xs text-slate-400">Warna Pink</p></div><div class="w-6 h-6 bg-pink-500 rounded-full shadow"></div></div></div>
+                        <button onclick="localStorage.removeItem('payrollData'); location.reload();" class="mt-4 w-full bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-600">Reset Data</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        window.deleteItem = async (id) => { const r = allData.find(d => d.__backendId === id); if (r) await deleteRecord(r); showToast('Data dihapus!'); renderPage(currentPage); };
+        function renderPage(page) { const pages = { dashboard: renderDashboard, pegawai: renderPegawai, jabatan: renderJabatan, absensi: renderAbsensi, periode: renderPeriode, generate: renderGenerate, 'data-gaji': renderDataGaji, potongan: renderPotongan, tunjangan: renderTunjangan, 'lap-gaji': renderLapGaji, 'lap-absensi': renderLapAbsensi, pengaturan: renderPengaturan }; if (pages[page]) pages[page](); else document.getElementById('content-area').innerHTML = '<p class="text-slate-400">Halaman tidak ditemukan.</p>'; lucide.createIcons(); }
+
+        initData();
+        lucide.createIcons();
+    </script>
+</body>
+</html>
